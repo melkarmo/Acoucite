@@ -9,6 +9,11 @@ The application allows the visitor to choose a noise measuring station in the Ly
 *Environment :*  
    (**Back**) Python 3, Socketserver, Httpserver, Matplotlib, SQLite  
    (**Front**) JavaScript, HTML/CSS, Leaflet
+   
+## Configuration
+
+All the data is stored in `acoucite.sqlite`.   
+   Start the back-end server by running `server.py` and go to http://localhost:8080/.
 
 ## Screenshots
 
