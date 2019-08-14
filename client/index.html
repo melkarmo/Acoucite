@@ -1,0 +1,393 @@
+<DOCTYPE html>  
+
+<script src="leaflet.js"> // insertion bibliothèque Leaflet : http://leafletjs.com/ </script>
+
+<html>
+ <head>
+  <title>Application Acoucité</title> <!-- Titre de la page -->
+  <link rel="icon" type="image/png" href="images/favicon.png" /> <!-- Icône de la page -->
+  <link rel="stylesheet" type="text/css" href="style.css" />
+  <link rel="stylesheet" type="text/css" href="leaflet.css" />
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+ </head>
+ 
+ <body onload="load_data();">  <!-- Récupération des données avec le chargement de la page -->
+
+
+  <!-- Titre général de l'application -->
+  <h1>Mesure de bruit à Lyon par le réseau Acoucité</h1>
+
+  
+  <!-- Zone pour l'insertion de la carte OSM via Leaflet -->
+  <div class="map" id="map"></div> 
+
+  <!-- Zone pour l'affichage des descriptions et de l'interface prenant les entrées de l'utilisateur -->
+  <div class="entrees">
+  
+
+    <!-- Zone pour l'affichage dynamique des descriptions -->
+    <p id="description"><i>Cliquez sur un marqueur pour séléctionner une station de mesure.</i></p>
+
+
+    <!-- Zone pour le formulaire de demande de la période de calcul du bruit -->
+    <p id="demandePeriode"></p>
+ 
+    <!-- Formulaire d'entrée de la période de calcul du bruit -->
+    <form name = "choixPeriode">
+      <p id="periodeGraph"></p>
+    </form>
+
+
+    <!-- Zone pour le formulaire de demande de la date de début des mesures -->
+    <p id="demandeDate1"></p>
+
+    <!-- Formulaire d'entrée de l'année de la date de début -->
+    <form name = "choixAnnee1">
+     <p id="anneeDebut"></p>
+    </form>
+
+    <!-- Formulaire d'entrée du mois de la date de début -->
+    <form name = "choixMois1">
+      <p id="moisDebut"></p>
+    </form>
+
+    <!-- Formulaire d'entrée du jour de la date de début -->
+    <form name = "choixJour1">
+      <p id="jourDebut"></p>
+    </form>
+
+
+    <!-- Zone pour le formulaire de demande de la date de fin des mesures -->
+    <p id="demandeDate2"></p>
+
+    <!-- Formulaire d'entrée de l'année de la date de fin -->
+    <form name = "choixAnnee2">
+      <p id="anneeFin"></p>
+    </form>
+
+    <!-- Formulaire d'entrée du mois de la date de fin -->
+    <form name = "choixMois2">
+      <p id="moisFin"></p>
+    </form>
+
+    <!-- Formulaire d'entrée du jour de la date de fin -->
+    <form name = "choixJour2">
+      <p id="jourFin"></p>
+    </form>
+
+
+    <!-- Zone pour afficher un message d'information sur la génération ou non de l'historique du bruit -->
+    <p id=infoGraph></p>
+
+
+  </div>
+
+
+  <!-- Zone d'affichage de l'historique du bruit -->
+  <div id="zoneGraphique"></div>
+
+
+  <!-- Pied de page où figurent les "sponsors" de l'application -->
+  <div id="bande"><center><img class="sponso" src="/images/banniere-site.png"></center></div>
+
+
+ </body>
+</html>
+
+<script>
+
+// Creation d'une carte dans la balise div "map", et positionne la vue sur un point donné et un niveau de zoom
+var map = L.map('map').setView([45.760,4.85], 11);
+// Ajout d'une couche de dalles OpenStreetMap
+L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+     attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+     }).addTo(map);
+
+// Les fonctions JavaScript suivantes ont pour objectif commun l'appel au serveur en lui communiquant des paramètres d'entrées (clic, date, période) afin qu'après traitement sur le serveur de la requête désirée, de récupérer les données renvoyées, notamment du script html pour générer du texte, des formulaire et des historiques de bruit, et ainsi mettre à jour la page de l'application
+
+// Chargement des données dans la carte 
+function load_data () {
+var xhr = new XMLHttpRequest();
+xhr.onload = function() {   // fonction callback
+    // Récupération des données renvoyées par le serveur
+	var data = JSON.parse(this.responseText);
+    // Boucle sur les enregistrements renvoyés
+    for ( n = 0; n < data.length; n++ ) {
+    // Insertion d'un marqueur à la position, attachement d'une popup, capture de l'évènement "clic'
+	  L.marker([data[n].lat,data[n].lon]).addTo(map)
+        .bindPopup('Station '+data[n].ref)
+		.addEventListener('click',OnMarkerClick)
+		.idnum=data[n].id;   // Propriété personnalisée ajouté au marqueur
+	  }
+  };
+xhr.open('GET','/location',true);
+xhr.send();
+};
+
+// Fonction appellée lors du clic sur un marqueur sur la carte
+function OnMarkerClick (e) {
+var xhr = new XMLHttpRequest();
+var xhr2 = new XMLHttpRequest();
+var xhr3 = new XMLHttpRequest();
+xhr.onload = function() {
+  // Récupération des données renvoyées par le serveur
+  var data = JSON.parse(this.responseText);
+  // Réinitialisation de l'interface d'entrée de l'utilisateur après choix d'une nouvelle station de mesure
+  demandeDate1.innerHTML = data.toWrite;
+  anneeDebut.innerHTML = data.toWrite;
+  moisDebut.innerHTML = data.toWrite;
+  jourDebut.innerHTML = data.toWrite;
+  demandeDate2.innerHTML = data.toWrite;
+  anneeFin.innerHTML = data.toWrite;
+  moisFin.innerHTML = data.toWrite;
+  jourFin.innerHTML = data.toWrite;
+  demandePeriode.innerHTML = 'Choisissez la période durant laquelle sera calculé le niveau sonore journalier :';
+  zoneGraphique.innerHTML = data.toWrite;
+  infoGraph.innerHTML = '';
+  };
+xhr2.onload = function() { 
+  // Récupération des données renvoyées par le serveur
+	var data = JSON.parse(this.responseText);
+	// Affichage dans la zone 'description' du nom (reprise dans le popup) et de la description récupéré par l'appel au serveur
+	description.innerHTML =  '<b><i>' + e.target.getPopup().getContent() + '</i></b><br>'+ data.desc + ' ( dernière valeur mesurée le ' + data.date_update + ' à ' + data.hour_update + ' )';
+  };
+xhr3.onload = function() {
+  // Récupération des données renvoyées par le serveur
+  var data = JSON.parse(this.responseText);
+  // Création de la liste déroulante des choix de la période de calcul du bruit
+  periodeGraph.innerHTML = data.toWrite;
+  };
+// On réinitialise l'interface d'entrée de l'utilisateur par un appel au serveur
+xhr.open('GET','/reinitialisation/',true);
+xhr.send();
+// On récupère la description du lieu n° idnum par un appel au serveur
+xhr2.open('GET','/description/'+e.target.idnum,true);
+xhr2.send();
+// On crée la liste déroulante des choix de la période de calcul du bruit par un appel au serveur
+xhr3.open('GET','/displayPeriode/',true);
+xhr3.send();
+};
+
+// Fonction appellée lors de la séléction d'une période
+function selectPeriode () {
+  i = document.choixPeriode.periodeMesure.selectedIndex; // i = indice de la période séléctionnée
+  // (Robustesse) Si la période séléctionnée correspond au titre de la liste déroulante (ce qui ne correspond à aucune période concrète), on réinitialise l'interface d'entrée de l'utilisateur
+  if (i == 0) {
+    var xhr1 = new XMLHttpRequest();
+    xhr1.onload = function() {
+      var data = JSON.parse(this.responseText);
+      demandeDate1.innerHTML = data.toWrite;
+      anneeDebut.innerHTML = data.toWrite;
+      moisDebut.innerHTML = data.toWrite;
+      jourDebut.innerHTML = data.toWrite;
+      demandeDate2.innerHTML = data.toWrite;
+      anneeFin.innerHTML = data.toWrite;
+      moisFin.innerHTML = data.toWrite;
+      jourFin.innerHTML = data.toWrite;
+      // On supprime on "vide" la zone graphique et on supprime les informations d'un éventuel historique précédent
+      zoneGraphique.innerHTML = data.toWrite;
+      infoGraph.innerHTML = '';
+    };
+    xhr1.open('GET','/robustessePeriode/',true);
+    xhr1.send();
+    return;
+  };
+  pM = document.choixPeriode.periodeMesure.options[i].value; // pM = période séléctionnée
+  // La période étant séléctionnée, on peut alors créer les listes déroulantes pour le choix des dates car les dates dépendent de la période désirée (prise en comtpe de la base de données)
+  var xhr = new XMLHttpRequest();
+  xhr.onload = function() {
+    var data = JSON.parse(this.responseText);
+    // (Robustesse) On notera que les mois et jours ne peuvent être choisis avant l'année afin de respecter les données figurant dans la base de données, on ne fait qu'afficher le titre de leurs listes déroulantes
+    demandeDate1.innerHTML = 'Choisissez une date de début : ';
+    anneeDebut.innerHTML = data.toWrite1;
+    moisDebut.innerHTML = '<select name="mois1"><option>--- Séléctionnez le mois de début ---</option></select>';
+    jourDebut.innerHTML = '<select name="jour1"><option>--- Séléctionnez le jour de début ---</option></select>';
+    demandeDate2.innerHTML = 'Choisissez une date de fin : ';
+    anneeFin.innerHTML = data.toWrite2;
+    moisFin.innerHTML = '<select name="mois2"><option>--- Séléctionnez le mois de fin ---</option></select>';
+    jourFin.innerHTML = '<select name="jour2"><option>--- Séléctionnez le jour de fin ---</option></select>';
+    // On supprime on "vide" la zone graphique et on supprime les informations d'un éventuel historique précédent
+    zoneGraphique.innerHTML = '';
+    infoGraph.innerHTML = '';
+  };
+  // Par appel au serveur, on récupère les choix des années correspondant à la période choisie
+  xhr.open('GET','/fromPeriodeToYears/'+pM,true);
+  xhr.send();
+};
+
+// Fonction appellée lors de la séléction de l'année de début
+function selectYear1 () {
+  i = document.choixAnnee1.annee1.selectedIndex; // i = indice de l'année de début séléctionnée
+  // (Robustesse) Si l'année séléctionnée correspond au titre de la liste déroulante (ce qui ne correspond à aucune année concrète), on réinitialise l'interface d'entrée de la date de début de l'utilisateur
+  if (i == 0) {
+    var xhr1 = new XMLHttpRequest();
+    xhr1.onload = function() {
+      var data = JSON.parse(this.responseText);
+      moisDebut.innerHTML = '<select name="mois1"><option>--- Séléctionnez le mois de début ---</option></select>';
+      jourDebut.innerHTML = '<select name="jour1"><option>--- Séléctionnez le jour de début ---</option></select>';
+      // On supprime on "vide" la zone graphique et on supprime les informations d'un éventuel historique précédent
+      zoneGraphique.innerHTML = data.toWrite;
+      infoGraph.innerHTML = '';
+    };
+    xhr1.open('GET','/robustesseDate/1/',true);
+    xhr1.send();
+    return;
+  };
+  an1 = document.choixAnnee1.annee1.options[i].value; // an1 = année de début sélectionnée
+  // L'année de début étant séléctionnée, on peut alors créer les listes déroulantes pour le choix des mois de début car les mois de début dépendent de l'année de début désirée (prise en compte de la base de données)
+  var xhr = new XMLHttpRequest();
+  xhr.onload = function() {
+    var data = JSON.parse(this.responseText);
+    moisDebut.innerHTML = data.toWrite;
+    jourDebut.innerHTML = '<select name="jour1"><option>--- Séléctionnez le jour de début ---</option></select>';
+    // On supprime on "vide" la zone graphique et on supprime les informations d'un éventuel historique précédent
+    zoneGraphique.innerHTML = '';
+    infoGraph.innerHTML = '';
+  };
+  // Par appel au serveur, on récupère les choix des mois de début correspondant à l'année de début choisie
+  xhr.open('GET','/fromYearToMonth/1/'+an1,true);
+  xhr.send();
+};
+
+// Fonction appellée lors de la séléction du mois de début
+function selectMonth1 () {
+  i = document.choixMois1.mois1.selectedIndex; // i = indice du mois de début séléctionné
+  // (Robustesse) Si le mois séléctionné correspond au titre de la liste déroulante (ce qui ne correspond à aucun mois concret), on réinitialise l'interface d'entrée du mois et du jour de début de l'utilisateur
+  if (i == 0) {
+    var xhr1 = new XMLHttpRequest();
+    xhr1.onload = function() {
+      var data = JSON.parse(this.responseText);
+      jourDebut.innerHTML = '<select name="jour1"><option>--- Séléctionnez le jour de début ---</option></select>';
+      // On supprime on "vide" la zone graphique et on supprime les informations d'un éventuel historique précédent
+      zoneGraphique.innerHTML = data.toWrite;
+      infoGraph.innerHTML = '';
+    };
+    xhr1.open('GET','/robustesseDate/1/',true);
+    xhr1.send();
+    return;
+  };
+  mo1 = document.choixMois1.mois1.options[i].value; // mo1 = mois de début sélectionnée
+  // Le mois de début étant séléctionnée, on peut alors créer les listes déroulantes pour le choix des jours de début car les jours de début dépendent du mois de début désiré (prise en compte de la base de données)
+  var xhr = new XMLHttpRequest();
+  xhr.onload = function() {
+    var data = JSON.parse(this.responseText);
+    jourDebut.innerHTML = data.toWrite;
+    // On supprime on "vide" la zone graphique et on supprime les informations d'un éventuel historique précédent
+    zoneGraphique.innerHTML = '';
+    infoGraph.innerHTML = '';
+  };
+  // Par appel au serveur, on récupère les choix des jours de début correspondant au mois de début choisi
+  xhr.open('GET','/fromMonthToDay/1/'+mo1,true);
+  xhr.send();
+};
+
+// Fonction appellée lors de la séléction du jour de début
+function selectDay1 () {
+  i = document.choixJour1.jour1.selectedIndex; // i = indice du jour de début séléctionné
+  // (Robustesse) Si le jour séléctionné correspond au titre de la liste déroulante (ce qui ne correspond à aucun jour concret), on réinitialise l'interface d'entrée du jour de début de l'utilisateur
+  if (i == 0) {
+    var xhr1 = new XMLHttpRequest();
+    xhr1.onload = function() {
+      var data = JSON.parse(this.responseText);
+      // On supprime on "vide" la zone graphique et on supprime les informations d'un éventuel historique précédent
+      zoneGraphique.innerHTML = data.toWrite;
+      infoGraph.innerHTML = '';
+    };
+    xhr1.open('GET','/robustesseDate/1/',true);
+    xhr1.send();
+    return;
+  };
+  da1 = document.choixJour1.jour1.options[i].value; // da1 = jour de début sélectionné
+  // Le jour de début étant séléctionné, on peut alors, si et seulement si la date de fin a été séléctionnée (voir serveur), afficher l'historique des bruits
+  var xhr = new XMLHttpRequest();
+  xhr.onload = function() {
+    var data = JSON.parse(this.responseText);
+    zoneGraphique.innerHTML = data.toWrite1;
+    infoGraph.innerHTML = data.toWrite2;
+  };
+  // Par appel au serveur, on renvoie le code html permettant d'afficher l'historique si la période de mesure, les dates de début et de fin ont été entrées par l'utilisateur
+  xhr.open('GET','/endDate/1/'+da1,true);
+  xhr.send();
+};
+
+// Les fonctions selectYear2, selectMonth2 et selectDay2 ont un code parfaitement analogue respectivement aux fonctions selectYear2, selectMonth2 et selectDay2 vue précédemment en remplaçant les paramètres de la date de début par ceux de de la date de fin, d'où l'absence de commentaire pour ce qui suit
+
+function selectYear2 () {
+  i = document.choixAnnee2.annee2.selectedIndex;
+  if (i == 0) {
+    var xhr1 = new XMLHttpRequest();
+    xhr1.onload = function() {
+      var data = JSON.parse(this.responseText);
+      moisFin.innerHTML = '<select name="mois2"><option>--- Séléctionnez le mois de fin ---</option></select>';
+      jourFin.innerHTML = '<select name="jour2"><option>--- Séléctionnez le jour de fin ---</option></select>';
+      zoneGraphique.innerHTML = data.toWrite;
+      infoGraph.innerHTML = '';
+    };
+    xhr1.open('GET','/robustesseDate/2/',true);
+    xhr1.send();
+    return;
+  };
+  an2 = document.choixAnnee2.annee2.options[i].value;
+  var xhr = new XMLHttpRequest();
+  xhr.onload = function() {
+    var data = JSON.parse(this.responseText);
+    moisFin.innerHTML = data.toWrite;
+    jourFin.innerHTML = '<select name="jour2"><option>--- Séléctionnez le jour de fin ---</option></select>';
+    zoneGraphique.innerHTML = '';
+    infoGraph.innerHTML = '';
+  };
+  xhr.open('GET','/fromYearToMonth/2/'+an2,true);
+  xhr.send();
+};
+
+function selectMonth2 () {
+  i = document.choixMois2.mois2.selectedIndex;
+  if (i == 0) {
+    var xhr1 = new XMLHttpRequest();
+    xhr1.onload = function() {
+      var data = JSON.parse(this.responseText);
+      jourFin.innerHTML = '<select name="jour2"><option>--- Séléctionnez le jour de fin ---</option></select>';
+      zoneGraphique.innerHTML = '';
+      infoGraph.innerHTML = '';
+    };
+    xhr1.open('GET','/robustesseDate/2/',true);
+    xhr1.send();
+    return;
+  };
+  mo2 = document.choixMois2.mois2.options[i].value;
+  var xhr = new XMLHttpRequest();
+  xhr.onload = function() {
+    var data = JSON.parse(this.responseText);
+    jourFin.innerHTML = data.toWrite;
+    zoneGraphique.innerHTML = '';
+    infoGraph.innerHTML = '';
+  };
+  xhr.open('GET','/fromMonthToDay/2/'+mo2,true);
+  xhr.send();
+};
+
+function selectDay2 () {
+  i = document.choixJour2.jour2.selectedIndex;
+  if (i == 0) {
+    var xhr1 = new XMLHttpRequest();
+    xhr1.onload = function() {
+      var data = JSON.parse(this.responseText);
+      zoneGraphique.innerHTML = data.toWrite;
+      infoGraph.innerHTML = '';
+    };
+    xhr1.open('GET','/robustesseDate/2/',true);
+    xhr1.send();
+    return;
+  };
+  da2 = document.choixJour2.jour2.options[i].value;
+  var xhr = new XMLHttpRequest();
+  xhr.onload = function() {
+    var data = JSON.parse(this.responseText);
+    zoneGraphique.innerHTML = data.toWrite1;
+    infoGraph.innerHTML = data.toWrite2;
+  };
+  xhr.open('GET','/endDate/2/'+da2,true);
+  xhr.send();
+};
+
+</script>

@@ -1,0 +1,100 @@
+﻿body {
+  background-image:url(images/bckg-site.png); /* image de Lyon en fond de page */
+  background-color: black;
+  font-family: 'Trebuchet MS'; /* police d'écriture utilisée dans l'interface utilisateur */
+  font-size:13; /* taille de la police */
+  padding: 2em;
+}
+table {
+  border-collapse: collapse;
+  border: 1px solid #A0A0A0;
+}
+th {
+  background-color: #A0A0A0;
+  color: #f0f0ea; 
+}
+th, td {
+  border-left: 1px solid #A0A0A0;
+  padding-left: 0.5em;
+  padding-right: 0.5em;
+}
+th + th {
+  border-left: 1px solid #f0f0ea;
+}
+td.date {
+  text-align: center;
+}
+input, textarea {
+  font-family: monospace;
+  padding: 2px 0.5em;
+  width: 5em;
+  font-size: 1.2em;
+  line-height: 1.33em;
+  color: #666;
+  margin-top: 5px;
+}
+.button {
+  border: 3px outset #444;
+  background-color: #888;
+  padding: 5px 0.5em;
+  border-radius: 3px;
+  display: inline-block;
+  margin: 1em 0;
+  /* position: absolute; */
+  color: #eee;
+  text-shadow: #000 -1px -1px 0;
+  right: calc(100% - 8em - 3px);
+}
+/*
+a {
+  text-decoration: none;
+  color: black;
+  cursor: pointer;
+}
+*/
+a.delete:hover {
+  color: red;
+}
+#map {}
+
+ 
+/* positionnement de la carte à gauche de l'écran */
+.map{
+  width:48%;
+  height:80%;
+  float:left;
+}
+ 
+/* positionnement de l'interface des entrées de l'utilisateur à droite de la carte */ 
+.entrees{
+  width:48%;
+  height:80%;
+  float:right;
+
+  background-color: white;
+  opacity:0.85;
+  padding-left: 10px;
+
+}
+
+/* le graphique est séparé de la carte et de l'interface */
+.graph{
+  padding-top: 40px; 
+}
+
+/* la bannière des sponsors est séparée du graphique */
+.sponso{
+  padding-top: 40px; 
+  opacity:0.85;
+}
+
+/* on centre le titre et on met une couleur de texte et de fond transparents en réglant l'opacité, et on règle les bords */
+h1{
+  background-color:white;
+  text-align:center; 
+  color:grey;
+  opacity:0.85;
+  padding-bottom: 30px;
+  padding-top: 30px;
+  font-size:30;
+}
