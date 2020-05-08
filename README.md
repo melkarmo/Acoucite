@@ -17,5 +17,5 @@ All the data is stored in `acoucite.sqlite`.
 
 ## Screenshots
 
-![Capture1](https://user-images.githubusercontent.com/35910546/63026412-6eda5c00-beab-11e9-8d8e-d4b11dd8af83.PNG)
-![Capture2](https://user-images.githubusercontent.com/35910546/63026339-4d797000-beab-11e9-9a1c-ba912c2896b2.PNG)
+![Capture1](https://raw.githubusercontent.com/melkarmo/Acoucite/master/screenshots/screenshot1.PNG)
+![Capture2](https://raw.githubusercontent.com/melkarmo/Acoucite/master/screenshots/screenshot2.PNG)
